@@ -1,0 +1,15 @@
+{
+  "physics": {
+    "speed": 150.31028669833194,
+    "jump": 705.1227336915946,
+    "gravity": 1406.7818715834014
+  },
+  "clean_fit_windows": 244,
+  "gravity_10_90": [
+    1332.363464822528,
+    1454.1967223075242
+  ],
+  "units": "pixels at board width 420; time in seconds",
+  "jump_uncertainty": "Inferred without click timestamps; validate live.",
+  "tracked_samples": 593
+}

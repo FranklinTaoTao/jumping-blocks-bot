@@ -1,0 +1,4 @@
+include run.sh requirements.txt
+recursive-include docs *.md *.png
+recursive-include tests *.py *.json
+recursive-include tools *.py

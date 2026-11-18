@@ -9,7 +9,13 @@ import numpy as np
 class ScoreReader:
     def __init__(self):
         with np.load(Path(__file__).parent / "assets" / "digits.npz") as data:
-            self.templates = {int(k): self.normalize(data[k]) for k in data.files}
+            templates = [(int(k), self.normalize(data[k])) for k in data.files]
+        with np.load(Path(__file__).parent / "assets" / "digits_windows.npz") as data:
+            # Windows draws 1 without the Linux font's horizontal base.
+            templates.extend((int(k), self.normalize(data[k])) for k in data.files)
+        templates.sort(key=lambda item: item[0])
+        self.digits = [digit for digit, _ in templates]
+        self.templates = np.stack([glyph.ravel() for _, glyph in templates])
 
     @staticmethod
     def normalize(glyph):
@@ -22,8 +28,8 @@ class ScoreReader:
         return out
 
     def read(self, board):
-        grey = cv2.cvtColor(board, cv2.COLOR_BGR2GRAY)
-        mask = np.uint8(grey[35:135] < 78) * 255
+        grey = cv2.cvtColor(board[35:135], cv2.COLOR_BGR2GRAY)
+        _, mask = cv2.threshold(grey, 77, 255, cv2.THRESH_BINARY_INV)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         boxes = sorted([cv2.boundingRect(c) for c in contours])
         boxes = [b for b in boxes if 40 <= b[3] <= 72 and 3 < b[2] < 60 and 80 < b[0] < 340]
@@ -34,11 +40,11 @@ class ScoreReader:
         digits = []
         for x, y, w, h in boxes:
             g = self.normalize(mask[y : y + h, x : x + w])
-            errors = sorted(
-                (float(np.mean((g - template) ** 2)), digit)
-                for digit, template in self.templates.items()
-            )
-            if errors[0][0] > 0.11:
+            errors = self.templates - g.ravel()
+            np.square(errors, out=errors)
+            errors = errors.mean(axis=1)
+            match = int(errors.argmin())
+            if errors[match] > 0.11:
                 return None
-            digits.append(str(errors[0][1]))
+            digits.append(str(self.digits[match]))
         return int("".join(digits))

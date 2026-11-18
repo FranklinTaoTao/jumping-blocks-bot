@@ -3,9 +3,15 @@
 import cv2
 import numpy as np
 
+from .motion import horizontal_extent
+
 
 def annotate(obs, state=None, decision=None, status=""):
-    image = obs.image.copy()
+    if obs.image is None:
+        _, _, width, height = obs.roi
+        image = np.full((round(420 * height / width), 420, 3), 32, np.uint8)
+    else:
+        image = obs.image.copy()
     for b in obs.obstacles:
         cv2.rectangle(
             image, (int(b.x), int(b.y)), (int(b.x + b.w), int(b.y + b.h)), (255, 140, 0), 1
@@ -13,6 +19,22 @@ def annotate(obs, state=None, decision=None, status=""):
     for shape in obs.shapes:
         cv2.polylines(image, [shape.points.astype(np.int32)], True, (255, 0, 255), 2)
     if state:
+        for index, (x, y, w, h, vx, vy) in enumerate(state.obstacles):
+            if index >= len(state.obstacle_bounds):
+                continue
+            lower, upper = state.obstacle_bounds[index]
+            if upper <= lower:
+                continue
+            for dt in (0.25, 0.5):
+                xx, width = horizontal_extent(x, w, vx, dt, lower, upper)
+                yy = y + vy * dt
+                cv2.rectangle(
+                    image,
+                    (round(float(xx)), round(yy)),
+                    (round(float(xx + width)), round(yy + h)),
+                    (130, 110, 30),
+                    1,
+                )
         for shape in state.shapes:
             future = shape.predict([0.2, 0.4])
             for polygon in future:
@@ -28,9 +50,13 @@ def annotate(obs, state=None, decision=None, status=""):
         cv2.circle(image, tuple(points[-1]), 4, (0, 160, 255), -1)
     label = {-1: "LEFT", 0: "WAIT", 1: "RIGHT"}[decision.action] if decision else "NO TRACK"
     lines = [status, label + (" | " + decision.reason if decision else "")]
+    if decision and decision.reset_window is not None:
+        early, late = decision.reset_window
+        lines.append(f"Reset window {early * 1000:.0f}-{late * 1000:.0f} ms")
     if state:
+        lines.append(f"pos=({state.x:.0f}, {state.y:.0f}) | v=({state.vx:.0f}, {state.vy:.0f})")
         lines.append(
-            f"v=({state.vx:.0f}, {state.vy:.0f}) | blocks={len(state.obstacles)} hammers={len(state.shapes)}"
+            f"camera={state.camera_speed:.0f} px/s | blocks={len(state.obstacles)} | hammers={len(state.shapes)}"
         )
     # Keep diagnostics outside the board: a header painted over the first 60
     # pixels hides exactly the incoming hazards that need early inspection.

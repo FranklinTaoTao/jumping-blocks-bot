@@ -1,0 +1,11 @@
+{
+  "physics": {
+    "speed": 146.3,
+    "jump": 705.4029607192444,
+    "gravity": 1403.2053064936888
+  },
+  "source": "Four controlled Windows opening jumps; independent straight horizontal segments",
+  "held_out_vertical_rmse": 0.837,
+  "click_to_visible_delay_ms": 51.0,
+  "units": "pixels at board width 420; time in seconds"
+}

@@ -1,4 +1,5 @@
 .venv/
+.rl-venv/
 __pycache__/
 *.pyc
 *.nbc

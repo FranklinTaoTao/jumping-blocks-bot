@@ -1,4 +1,5 @@
-include run.sh requirements.txt
+include run.sh run.ps1 requirements.txt
+recursive-include native CMakeLists.txt *.cpp *.hpp
 recursive-include docs *.md *.png
 recursive-include tests *.py *.json
 recursive-include tools *.py

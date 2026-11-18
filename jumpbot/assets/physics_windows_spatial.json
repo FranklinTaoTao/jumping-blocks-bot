@@ -1,0 +1,9 @@
+{
+  "physics": {
+    "speed": 144.5032459957818,
+    "jump": 679.8784746830698,
+    "gravity": 1396.5520450294866
+  },
+  "source": "Windows MSS, controlled twenty-jump experiment, 2026-11-16",
+  "notes": "Experimental prior for --adaptive-motion. Within-record fits do not establish transferable wall-clock reset timing."
+}

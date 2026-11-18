@@ -1,6 +1,5 @@
 # Jumping Blocks Bot · 跃动方块
 
-![Recorded 100-point run with the game on the left and bot detections on the right](docs/images/score-100.png)
 
 *A recorded development run: game on the left; obstacle detection, hammer
 geometry, and trajectory predictions on the right.*
@@ -18,8 +17,8 @@ offline regression tests; they have not yet been validated in another live run.
 
 ## Requirements
 
-- Linux with an **X11** desktop session; Wayland live capture is not supported.
-- Python **3.12 or newer** and the system's `libX11` library.
+- Windows, or Linux with an **X11** desktop session; Wayland live capture is not supported.
+- Python **3.12 or newer**; Linux also requires the system's `libX11` library.
 - The game open in a visible, unobstructed WeChat mini-app window.
 
 ## Install
@@ -34,6 +33,41 @@ python -m pip install -e .
 
 Runtime dependencies are declared in `pyproject.toml`. Installing with
 `python -m pip install -r requirements.txt` is also supported.
+
+On Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
+.\run.ps1 --show
+.\run.ps1 --play --focus --duration 60
+```
+
+Windows selects the visible portrait game by its title (`跃动方块`). Use
+`--title` if the title differs. Capture reads the client area from the desktop
+using MSS, so keep the game unobstructed and on screen. Input uses Windows
+SendInput and pauses when the game loses focus. Run the game without
+administrator rights so Windows permits input from the bot.
+
+The Windows `--native-vision` option keeps capture and detection inside a C++
+DLL and passes detections to the Python planner. See the [native build and
+benchmarks](docs/windows-native-vision.md).
+
+The MSS path defaults to `--render-delay 0.040`. Subsequent controlled
+tests found that a fixed display delay did not transfer consistently between
+runs. The experimental configuration below uses spatial parabola fitting and
+no additional fixed display delay.
+Live clocks use the high-resolution performance counter, and compiled search
+warms up with the same argument types as live play.
+
+See the [Windows lessons learned](docs/lessons-learned.md#windows-lessons) for calibration and timing guidance.
+
+```powershell
+.\run.ps1 --play --focus --physics jumpbot/assets/physics_windows_spatial.json `
+  --render-delay 0 --adaptive-motion --camera-tau 0.011 `
+  --search-step 0.025 --beam 600 --cooldown 0.18 `
+  --target 200 --duration 600 --record artifacts/windows-trial
+```
 
 ## Preview and play
 
@@ -160,5 +194,4 @@ p95 for the capture/decision/input loop on the development machine; performance
 depends on hardware, window size, and scene complexity.
 
 Recordings, screenshots, generated reviews, virtual environments, and compiled
-caches are excluded from version control. The bundled test fixture contains
-only numerical observations and timing data.
+caches are excluded from version control. The Windows branch uses synthetic inputs for its offline checks.

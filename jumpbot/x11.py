@@ -99,7 +99,7 @@ class GameWindow:
             return False
         xtest.fake_input(self.display, X.MotionNotify, x=target_x, y=target_y)
         xtest.fake_input(self.display, X.ButtonPress, 1)
-        self.last_press_time = time.monotonic()
+        self.last_press_time = time.perf_counter()
         try:
             self.display.sync()
             # A short real press survives games which poll button state each tick.

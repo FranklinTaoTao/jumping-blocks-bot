@@ -54,6 +54,11 @@ Horizontal motion continues after the apex and while falling. Waiting lets the
 current arc continue; it does not stop the character or make it hover. The
 opening screen has an idle state before the first jump.
 
+At a sidewall the horizontal position clamps to the board edge. Contact does
+not kill the character or reverse its direction; vertical motion continues.
+A controlled two-jump probe confirmed this. Part of the sprite is clipped at
+the edge, so tracking restores its full width and centre before fitting motion.
+
 ## Camera: a one-way lock at the middle
 
 The observed behavior has three parts:
@@ -131,6 +136,10 @@ obstacle to become visible.
 Small-block tracks can estimate translation independent of camera motion.
 Unseen obstacle positions and future spawn patterns are not known in advance.
 
+Later Windows recordings also contain roughly 70-unit blocks moving sideways.
+They reverse near left-edge X=65 and right-edge X=356. Rectangular tracking now
+covers these larger objects, with reflected rather than unbounded linear motion.
+
 ### Rotating hammers
 
 Hammers have an irregular head-and-handle shape and rotate while camera motion
@@ -151,6 +160,12 @@ inner notches. Magenta outlines in diagnostic recordings show its current and
 predicted geometry. Partial visibility and changing contour shape can still
 make these estimates uncertain.
 
+Observed Windows hammers swing between approximately 30 and 150 degrees,
+reversing at each limit. Once the pivot is reliable, their forecast reflects
+the angle at those limits. Recent angular increments determine the direction,
+so averaging across a reversal does not keep the old direction for several
+frames. Incoming contours distorted by score text retain higher uncertainty.
+
 ## Clearing a wall
 
 The planner checks the character's full rectangle throughout a predicted arc.
@@ -162,7 +177,8 @@ When its horizontal span overlaps a bar:
 This is why a direction change can be too early: it resets upward velocity and
 may send the character into an underside, or toward a side before sufficient
 height has been gained. Waiting also needs checking because horizontal motion
-continues and can carry the character into an edge.
+continues until a sidewall stops it. The planner may wait at that wall, but
+still checks the character against bars and the bottom boundary.
 
 The implementation samples trajectories at intervals no longer than 15 ms and
 inflates obstacles for clearance and command-timing uncertainty. This remains

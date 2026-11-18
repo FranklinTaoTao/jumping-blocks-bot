@@ -75,17 +75,14 @@ not prove that the changed controller would have survived the encounter.
 
 ## 6. Rendered positions can straddle a jump reset
 
-In the 22-point run, old falling frames were included in the fit for a newly
-pressed jump. Around 109.209 seconds, the logged upward speed was approximately
-357 units/s even though the reset model indicated a substantially faster rise.
+Old falling frames can be included in the fit for a newly pressed jump. This
+can make the estimated upward speed much lower than the reset model predicts.
 
 **Change:** leave the first 50 ms after a known click out of the new arc fit and
 use the reset prior until enough clean observations are available.
 
 **Offline result:** on a held-out position about 102 ms later, the vertical
 forecast error decreased from approximately **25 to 3 normalized pixels**.
-The numerical observation sequence is preserved in
-[`tests/fixtures/late_jump.json`](../tests/fixtures/late_jump.json).
 
 **Validation limit:** this is one recorded regression case. The delay can vary
 with rendering, hardware, and load; live score improvement remains unmeasured.
@@ -126,13 +123,37 @@ use live runs to establish scores. Separate completed attempts from a session
 that ends while still active, and exclude an old score screen at startup from
 new-round high-score calculations.
 
-The reviewed batch contained completed scores of 83 and 22, followed by an
-unfinished attempt paused at 49. The later fixes were validated offline while
-live play remained stopped.
+## Windows lessons
 
-## Next validation
+### Calibrate reset latency in each session
 
-The next authorized live session should compare the revised controller with the
-recorded baseline, check whether early hammer detections remain stable, and
-measure jump-reset delay across more events. No further score claim follows
-from the offline fixes alone.
+Capture, planning, button delivery, and the visible velocity reset have
+different timestamps. A fixed input-delay setting from an earlier session can
+put a valid route on the wrong side of a bar. Estimate the current delay from
+observed horizontal reversals and track its spread. Use the adaptive setting
+with aligned delivery when the response is uncertain, and compare each
+estimate with later observations before revising the gravity or launch speed.
+
+### Plan the exit and leave room for timing error
+
+Use the next visible gap to choose where to leave the current opening. Wall
+contact stops horizontal movement, so repeatedly jumping on the same side can
+consume several launch windows without advancing. A safer route can involve
+coasting lower before turning inward. Recheck any queued reversal on fresh
+geometry and keep the reset inside a verified delivery window. If a slightly
+later jump would hit a bar or block, prefer a wider route when one is available.
+
+### Track obstacles in camera-corrected coordinates
+
+Separate camera easing from player and obstacle motion before fitting
+velocity. Keep the detected outline as the forecast starts, especially at
+slider and hammer reversals. A clipped contour or score overlap can bias the
+fit. Leave extra clearance until fresh frames establish the motion.
+
+### Verify with the right evidence
+
+Use saved observations to diagnose a collision and simulated courses to
+compare planner changes under timing jitter. Verify scores during live play.
+Record frame age, control timing, focus pauses, and missed captures so a
+missing observation can be distinguished from a poor route. Keep raw gameplay
+and debug captures local.

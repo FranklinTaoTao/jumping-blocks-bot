@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.21)
+project(jumpbot_native LANGUAGES CXX)
+
+find_package(OpenCV 5 REQUIRED COMPONENTS core imgproc imgcodecs geometry)
+add_library(jumpbot_vision SHARED capture.cpp vision.cpp)
+target_compile_features(jumpbot_vision PRIVATE cxx_std_17)
+target_compile_definitions(jumpbot_vision PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_link_libraries(jumpbot_vision PRIVATE ${OpenCV_LIBS} d3d11 dxgi)
+install(TARGETS jumpbot_vision RUNTIME DESTINATION .)
+if(TARGET opencv_world AND NOT OpenCV_STATIC)
+    install(FILES "$<TARGET_FILE:opencv_world>" DESTINATION .)
+endif()
